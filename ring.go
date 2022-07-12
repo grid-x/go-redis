@@ -581,7 +581,7 @@ func (c *Ring) process(ctx context.Context, cmd Cmder) error {
 	for attempt := 0; attempt <= c.opt.MaxRetries; attempt++ {
 		if attempt > 0 {
 			if err := internal.Sleep(ctx, c.retryBackoff(attempt)); err != nil {
-				return err
+				return fmt.Errorf("attempt ring retry %d: %w", attempt, err)
 			}
 		}
 

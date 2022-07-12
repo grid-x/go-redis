@@ -774,7 +774,7 @@ func (c *ClusterClient) process(ctx context.Context, cmd Cmder) error {
 	for attempt := 0; attempt <= c.opt.MaxRedirects; attempt++ {
 		if attempt > 0 {
 			if err := internal.Sleep(ctx, c.retryBackoff(attempt)); err != nil {
-				return err
+				return fmt.Errorf("attempt redirect %d: %w", attempt, err)
 			}
 		}
 
@@ -1099,7 +1099,7 @@ func (c *ClusterClient) _processPipeline(ctx context.Context, cmds []Cmder) erro
 		if attempt > 0 {
 			if err := internal.Sleep(ctx, c.retryBackoff(attempt)); err != nil {
 				setCmdsErr(cmds, err)
-				return err
+				return fmt.Errorf("attempt pipeline redirect %d: %w", attempt, err)
 			}
 		}
 
@@ -1291,7 +1291,7 @@ func (c *ClusterClient) _processTxPipeline(ctx context.Context, cmds []Cmder) er
 			if attempt > 0 {
 				if err := internal.Sleep(ctx, c.retryBackoff(attempt)); err != nil {
 					setCmdsErr(cmds, err)
-					return err
+					return fmt.Errorf("attempt transaction pipeline redirect %d: %w", attempt, err)
 				}
 			}
 
@@ -1456,7 +1456,7 @@ func (c *ClusterClient) Watch(ctx context.Context, fn func(*Tx) error, keys ...s
 	for attempt := 0; attempt <= c.opt.MaxRedirects; attempt++ {
 		if attempt > 0 {
 			if err := internal.Sleep(ctx, c.retryBackoff(attempt)); err != nil {
-				return err
+				return fmt.Errorf("attempt watch redirect %d: %w", attempt, err)
 			}
 		}
 
