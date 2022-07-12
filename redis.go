@@ -311,9 +311,13 @@ func (c *baseClient) withConn(
 func (c *baseClient) process(ctx context.Context, cmd Cmder) error {
 	var lastErr error
 	for attempt := 0; attempt <= c.opt.MaxRetries; attempt++ {
-		attempt := attempt
+		if attempt > 0 {
+			if err := internal.Sleep(ctx, c.retryBackoff(attempt)); err != nil {
+				return fmt.Errorf("attempt retry %d: %w", attempt, err)
+			}
+		}
 
-		retry, err := c._process(ctx, cmd, attempt)
+		retry, err := c._process(ctx, cmd)
 		if err == nil || !retry {
 			return err
 		}
@@ -323,13 +327,7 @@ func (c *baseClient) process(ctx context.Context, cmd Cmder) error {
 	return lastErr
 }
 
-func (c *baseClient) _process(ctx context.Context, cmd Cmder, attempt int) (bool, error) {
-	if attempt > 0 {
-		if err := internal.Sleep(ctx, c.retryBackoff(attempt)); err != nil {
-			return false, err
-		}
-	}
-
+func (c *baseClient) _process(ctx context.Context, cmd Cmder) (bool, error) {
 	retryTimeout := uint32(1)
 	err := c.withConn(ctx, func(ctx context.Context, cn *pool.Conn) error {
 		err := cn.WithWriter(ctx, c.opt.WriteTimeout, func(wr *proto.Writer) error {
@@ -421,7 +419,7 @@ func (c *baseClient) _generalProcessPipeline(
 	for attempt := 0; attempt <= c.opt.MaxRetries; attempt++ {
 		if attempt > 0 {
 			if err := internal.Sleep(ctx, c.retryBackoff(attempt)); err != nil {
-				return err
+				return fmt.Errorf("attempt pipeline retry %d: %w", attempt, err)
 			}
 		}
 
