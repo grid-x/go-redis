@@ -3,6 +3,7 @@ package pool
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -247,7 +248,7 @@ func (p *ConnPool) Get(ctx context.Context) (*Conn, error) {
 	}
 
 	if err := p.waitTurn(ctx); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("wait for turn on connection pool: %w", err)
 	}
 
 	for {
