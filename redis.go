@@ -302,10 +302,12 @@ func (c *baseClient) withConn(
 		<-errc
 
 		err = ctx.Err()
-		return err
 	case err = <-errc:
-		return err
 	}
+	if err != nil {
+		return fmt.Errorf("execute with conn: %w", err)
+	}
+	return nil
 }
 
 func (c *baseClient) process(ctx context.Context, cmd Cmder) error {
