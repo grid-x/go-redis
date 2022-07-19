@@ -280,34 +280,10 @@ func (c *baseClient) withConn(
 	if err != nil {
 		return err
 	}
-
 	defer func() {
 		c.releaseConn(ctx, cn, err)
 	}()
-
-	done := ctx.Done() //nolint:ifshort
-
-	if done == nil {
-		err = fn(ctx, cn)
-		return err
-	}
-
-	errc := make(chan error, 1)
-	go func() { errc <- fn(ctx, cn) }()
-
-	select {
-	case <-done:
-		_ = cn.Close()
-		// Wait for the goroutine to finish and send something.
-		<-errc
-
-		err = ctx.Err()
-	case err = <-errc:
-	}
-	if err != nil {
-		return fmt.Errorf("execute with conn: %w", err)
-	}
-	return nil
+	return fn(ctx, cn)
 }
 
 func (c *baseClient) process(ctx context.Context, cmd Cmder) error {
